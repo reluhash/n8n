@@ -1,0 +1,295 @@
+{
+  "name": "weather_calendar",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a chat assistant with strict tool execution rules.\n\nGLOBAL RULES:\n- NEVER call a tool with {} or [].\n- ALWAYS include required arguments.\n- If arguments are missing, ask a question.\n- Convert user intent into valid JSON before tool calls.\n\nCALENDAR LOGIC:\nIf user says \"calendar\":\n→ Ask: \"Do you want to view events or add a new event?\"\n→ Do NOT call tool.\n\nIf user says \"view events\":\n→ Call calendar tool with:\n  { \"action\": \"view\" }\n\nIf user says \"add event\":\n→ Ask for title, date, time.\n→ Do NOT call tool yet.\n\nOnly call calendar tool to add when ALL are present:\n  {\n    \"action\": \"add\",\n    \"title\": \"...\",\n    \"date\": \"...\",\n    \"time\": \"...\"\n  }\n",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fbb2f704-75f9-448e-ab2f-5328295456b4",
+      "name": "AI Agent",
+      "executeOnce": false,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "model": "mistralai/mistral-small-24b-instruct-2501",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "caee9702-a884-4bd8-ba48-22a65c33b259",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "z9BzsAF91mSOroRF",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "a8a96cb7-3c10-4202-a62f-7b16064afe89",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://intranuclear-debrah-nonethnologically.ngrok-free.dev/mcp/test",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        208
+      ],
+      "id": "dd845ce3-8ee9-4928-8deb-94caca99cbb5",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f124cfb2-5ddd-4ee1-9fcf-ce413367215b",
+      "name": "When chat message received",
+      "webhookId": "af1d1b8d-a1fd-45c8-9c73-406ba87ad0ff"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool when the user asks about weather, temperature, or forecast.\nInput requires a city name.\n",
+        "url": "https://api.weatherapi.com/v1/current.json?key=a08014e23db3423c97973056260302&q=Noida&aqi=yes",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={\n  \"latitude\": 28.6139,\n  \"longitude\": 77.2090\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        576,
+        208
+      ],
+      "id": "e2cda287-9359-4359-a888-3d2b14f9dccf",
+      "name": "getWeather"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "arpitameera@gmail.com",
+          "mode": "list",
+          "cachedResultName": "arpitameera@gmail.com"
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        704,
+        208
+      ],
+      "id": "98b282a7-9f7c-49a7-8d98-2dd518209f5a",
+      "name": "create_event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "QFbln8oRz9xNTcAn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "arpitameera@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        208
+      ],
+      "id": "8cd0a75a-38b7-47ca-8629-82f36d14b2c3",
+      "name": "Get_many_events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "QFbln8oRz9xNTcAn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "calendar": {
+          "__rl": true,
+          "value": "arpitameera@gmail.com",
+          "mode": "list",
+          "cachedResultName": "arpitameera@gmail.com"
+        },
+        "eventId": "51d6ibk3vnmqm8ql9agff7k61k",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        208
+      ],
+      "id": "85a68daa-a3d9-4418-b5f5-4a819fbd3b75",
+      "name": "Get_event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "QFbln8oRz9xNTcAn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "test"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        736,
+        0
+      ],
+      "id": "60273bd5-0888-4fc4-8930-867611b0d31a",
+      "name": "MCP Server Trigger",
+      "webhookId": "62ff57e7-3e5a-479d-b1b7-c55640c8617c"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getWeather": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_event": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_many_events": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_event": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "c2b69e72-6ffe-42ce-b116-1ef72897ed52",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7f0f90851bce4a5e63c339366895e69911aab228f4da0e88109ceb9c3788c9cc"
+  },
+  "id": "U7cAdSVLpxyiL84H2Z18p",
+  "tags": []
+}
