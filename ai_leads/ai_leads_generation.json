@@ -1,0 +1,467 @@
+{
+  "name": "ai_leads_generation",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8854cf4e-1c09-48ff-9ae6-8404c64a8740",
+              "leftValue": "={{$json.email}}\n",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -272,
+        -48
+      ],
+      "id": "c2226b24-5dcd-4d03-910e-929076f3eb72",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "maps-search",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1152,
+        160
+      ],
+      "id": "bfe7260a-261f-4d75-afac-c687a659c286",
+      "name": "Business Search Query",
+      "webhookId": "4e01534f-e290-4854-9038-87f282da8118"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google_maps"
+            },
+            {
+              "name": "q",
+              "value": "={{$node[\"Business Search Query\"].json[\"body\"][\"query\"]}}\n"
+            },
+            {
+              "name": "type",
+              "value": "search"
+            },
+            {
+              "name": "api_key",
+              "value": "33c668dd62eaae7ab7de4aacccb5e938d0748ccf3553ec56df0966a3a1ca7904"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -976,
+        -48
+      ],
+      "id": "d388429b-c3dc-4012-82bc-c085dfba4061",
+      "name": "Fetch Businesses (Google Maps)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $json.local_results || [];\n\nreturn results.map(place => ({\n  json: {\n    query: $items(\"Business Search Query\")[0].json.body.query,\n    business_name: place.title || \"\",\n    rating: place.rating || null,\n    reviews_count: place.reviews || place.user_ratings_total || 0,\n    address: place.address || \"\",\n    phone: place.phone || \"\",\n    website: place.website || \"\",\n    data_id: place.data_id || \"\",\n    place_id: place.place_id || \"\"\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        -48
+      ],
+      "id": "0d14d3e8-a133-48c4-92e8-86a531f7777b",
+      "name": "Normalize Business Data"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google_maps_reviews"
+            },
+            {
+              "name": "place_id",
+              "value": "={{$json.place_id}}"
+            },
+            {
+              "name": "hl",
+              "value": "en"
+            },
+            {
+              "name": "api_key",
+              "value": "d16c707c8ab830e9573d870fe94a6ee90b29fae50da941b49326aaa65e5b3f18"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -688,
+        288
+      ],
+      "id": "86c6449b-9363-488a-887c-c631520a84fc",
+      "name": "Fetch Reviews"
+    },
+    {
+      "parameters": {
+        "jsCode": "const reviews = $json.reviews || [];\n\nreturn {\n  json: {\n    top_review: reviews.length > 0 ? reviews[0].snippet : \"\",\n    review_count_fetched: reviews.length\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        304
+      ],
+      "id": "7143e342-13f0-4848-b3fc-efff923891c0",
+      "name": "Prepare Review Context"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "16FWv_6xBlUjee1E2Ti4bx1MXZzgZPehA6iP40EdeJ4s",
+          "mode": "list",
+          "cachedResultName": "lead_generation_ai",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16FWv_6xBlUjee1E2Ti4bx1MXZzgZPehA6iP40EdeJ4s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1137289684,
+          "mode": "list",
+          "cachedResultName": "Sheet3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16FWv_6xBlUjee1E2Ti4bx1MXZzgZPehA6iP40EdeJ4s/edit#gid=1137289684"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{$json.query}}",
+            "Business Name": "={{$json.business_name}}",
+            "Rating": "={{$json.rating}}",
+            "Phone": "={{$json.phone}}",
+            "Address": "={{$json.address}}",
+            "Reviews": "={{$json.top_review}}",
+            "Website": "={{$json.website}}",
+            "Email": "no",
+            "Email Sent": "no",
+            "Timestamp": "={{$now}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Business Name",
+              "displayName": "Business Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviews",
+              "displayName": "Reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -464,
+        -48
+      ],
+      "id": "c5eb052b-6705-4e67-aa6f-020ee8e0d157",
+      "name": "Save Lead to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rw4mBuTIdGh8IjKZ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://n8n.io"
+            },
+            {
+              "name": "X-Title",
+              "value": "lead-generation-ai"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistralai/mistral-7b-instruct\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a business review analyst. Always respond in valid JSON only.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyze these customer reviews and return JSON with complaints, positives, and business_need.\\nReviews: {{ $json.reviews }}\"\n    }\n  ],\n  \"temperature\": 0.3\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -32,
+        -64
+      ],
+      "id": "c7379c5d-cad5-4f27-b99c-e4b5ba768690",
+      "name": "AI – Analyze Reviews"
+    },
+    {
+      "parameters": {
+        "fromEmail": "arpitameera@gmail.com",
+        "toEmail": "roopbhawana315@gmail.com",
+        "subject": "=Improving customer experience at {{$json.name}}",
+        "html": "={{$json.generated_email}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        144,
+        -64
+      ],
+      "id": "9c661a08-1588-44a5-a22b-272c3523f7f5",
+      "name": "Send Personalized Outreach Email",
+      "webhookId": "c9c85590-179d-4799-bace-c7f9eb8901e8",
+      "credentials": {
+        "smtp": {
+          "id": "nt4nhEPnLHjL8ZLQ",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI – Analyze Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Search Query": {
+      "main": [
+        [
+          {
+            "node": "Fetch Businesses (Google Maps)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Businesses (Google Maps)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Business Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Business Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch Reviews",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Lead to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Reviews": {
+      "main": [
+        [
+          {
+            "node": "Prepare Review Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Review Context": {
+      "main": [
+        [
+          {
+            "node": "Save Lead to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead to Sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI – Analyze Reviews": {
+      "main": [
+        [
+          {
+            "node": "Send Personalized Outreach Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "15137a62-19d6-4c25-803c-2029c18de663",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c6c49d9c5749aabe548fcb1a3fe6dd1ade9d06808d2f2b5348553afbbf244e4d"
+  },
+  "id": "n4NP9gAhf9827Gxu",
+  "tags": []
+}
